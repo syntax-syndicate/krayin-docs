@@ -15,41 +15,38 @@ To learn in detail about Layouts, you can visit the Laravel documentation [here]
 To extend the default layout of the Krayin admin panel, you'll create or modify the `index.blade.php` file located at `packages/Webkul/Category/src/Resources/views/admin/index.blade.php`. Below is a detailed breakdown of how to integrate and customize the layout:
 
 ```html
-@extends('category::layouts.master')
+<x-admin::layouts>
+    <x-slot:title>
+        @lang('category::categories.index.title')
+    </x-slot>
 
-@push('css')
-    <style>
-        /*  */
-    </style>
-@endpush
+    @pushOnce('styles')
+        <style>
+            /* your styles go here */
+        </style>
+    @endPushOnce
 
-@section('page_title')
-    {{ __('category::categories.index.title') }}
-@endsection
-
-@section('content-wrapper')
-    <div class="content full-page">
-        <!-- -->
+    <div class="container ">
+        <!-- your content goes here -->
     </div>
-@endsection
 
-@push('scripts')
-    <script>
-        // 
-    </script>
-@endpush
+    @pushOnce('scripts')
+        <script>
+            /* your script goes here */
+        </script>
+    @endPushOnce
+</x-admin::layouts>
 ```
 
 | Prop Name   | Description                                                        |
 |-------------|--------------------------------------------------------------------|
-| **`@extends('category::layouts.master')`** | This `@extends` Blade directive to specify which layout the child view should "inherit"   |
-| **`@section('page_title')`** | This is used to define the title of the page.   |
-| **`@section('content-wrapper')`** | This is used to define the body of the page. |
-| **`@push('css')`** | This is used to add additional css. |
-| **`@push('scripts')`** | This is used to add additional javascript. |
+| **`<x-admin::layouts>`** | This Blade directive to specify which layout the child view should "inherit"   |
+| **`<x-slot:title>`** | This is used to define the title of the page.   |
+| **`@pushOnce('styles')`** | This is used to add additional css. |
+| **`@pushOnce('scripts')`** | This is used to add additional javascript. |
 
 ::: warning
 Notice that there are translations used in the blade files, so you will also need to add the corresponding translations in **`lang/app.php`**.
 :::
 
-If you don't want to include these layouts, you can create your own master file inside the creation layouts directory inside `Resources\Views\Layouts\master.blade.php`
+If you don't want to include these layouts, you can create your own master file inside the creation layouts directory inside `Resources\views\layouts\master.blade.php`

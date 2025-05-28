@@ -44,7 +44,7 @@ In **`Webkul\Ui\DataGrid\DataGrid.php`** abstract class, two abstract methods ar
 
         $this->addFilter('id', 'categories.id');
 
-        $this->setQueryBuilder($queryBuilder);
+        return $queryBuilder;
     }
     ```
 
@@ -61,14 +61,14 @@ In **`Webkul\Ui\DataGrid\DataGrid.php`** abstract class, two abstract methods ar
   | **`wrapper`**    | Perform actions based on a condition satisfied or apply some customization to the value.                                                                                                             |
 
     ```php
-    public function addColumns()
+    public function prepareColumns()
     {
         $this->addColumn([
-            'index' => 'id',
-            'label' => trans('category::app.admin.datagrid.id'),
-            'type' => 'number',
+            'index'      => 'id',
+            'label'      => trans('category::app.admin.datagrid.id'),
+            'type'       => 'number',
             'searchable' => false,
-            'sortable' => true,
+            'sortable'   => true,
             'filterable' => true
         ]);
     }
@@ -89,10 +89,10 @@ In **`Webkul\Ui\DataGrid\DataGrid.php`** abstract class, two abstract methods ar
     public function prepareActions()
     {
         $this->addAction([
-            'title' => trans('category::app.admin.datagrid.edit'),
+            'title'  => trans('category::app.admin.datagrid.edit'),
             'method' => 'GET',
-            'route' => 'admin.category.edit',
-            'icon' => 'icon pencil-lg-icon'
+            'route'  => 'admin.category.edit',
+            'icon'   => 'icon pencil-lg-icon',
         ]);
     }
     ```
@@ -120,7 +120,7 @@ Follow the steps below to implement multiple DataGrids:
     ```php
     namespace Webkul\Category\DataGrids;
 
-    use Webkul\Ui\DataGrid\DataGrid;
+    use Webkul\DataGrid\DataGrid;
 
     class CategoryDataGrid extends DataGrid
     {
@@ -174,31 +174,31 @@ Follow the steps below to implement multiple DataGrids:
 
 ### Render DataGrid
 
-6. In the view file **`views/admin/index.blade.php`**, use the **`table-component`** component and specify the URL from which it will load the JSON data:
+6. In the view file **`views/admin/index.blade.php`**, use the **`<x-admin::datagrid>`** component and specify the URL from which it will load the JSON data:
 
     ```php
-    @section('content-wrapper')
-        <div class="content full-page">
-            <table-component data-src="{{ route('admin.categories.index') }}">
-                <template v-slot:table-header>
-                    <h1>
-                        {!! view_render_event('admin.products.index.header.before') !!}
+    <x-admin::layouts>
+        <x-slot:title>
+            @lang('admin::app.catalog.categories.index.title')
+        </x-slot>
 
-                        {{ Breadcrumbs::render('categories') }}
+        <div class="flex items-center justify-between gap-4 max-sm:flex-wrap">
+            <p class="text-xl font-bold text-gray-800 dark:text-white">
+                @lang('Category')
+            </p>
 
-                        {{ __('Category') }}
-
-                        {!! view_render_event('admin.products.index.header.after') !!}
-                    </h1>
-
-                </template>
-
-                <template v-slot:table-action>
-                    <a href="{{ route('admin.categories.create') }}" class="btn btn-md btn-primary">{{ __('Create Category') }}</a>
-                </template>
-            <table-component>
+            <div class="flex items-center gap-x-2.5">
+                <a href="{{ route('admin.categories.create') }}">
+                    <div class="primary-button">
+                        @lang('Create Category')
+                    </div>
+                </a>
+            </div>        
         </div>
-    @stop
+
+        <x-admin::datagrid :src="route('admin.categories.index')" />
+
+    </x-admin::layouts>
     ```
 
     With these steps, your DataGrid is now ready to be used.
@@ -216,8 +216,8 @@ Here's an improved version of the provided DataGrid sample:
 
 namespace Webkul\Category\DataGrids\Category;
 
-use Webkul\UI\DataGrid\DataGrid;
 use Illuminate\Support\Facades\DB;
+use Webkul\DataGrid\DataGrid;
 
 class CategoryDataGrid extends DataGrid
 {
@@ -238,7 +238,7 @@ class CategoryDataGrid extends DataGrid
 
         $this->addFilter('id', 'categories.id');
 
-        $this->setQueryBuilder($queryBuilder);
+        return $queryBuilder;
     }
 
     /**
@@ -246,27 +246,33 @@ class CategoryDataGrid extends DataGrid
      *
      * @return void
      */
-    public function addColumns()
+    public function prepareColumns()
     {
         $this->addColumn([
-            'index'    => 'slug',
-        'label'    => trans('Slug'),
-            'type'     => 'string',
-            'sortable' => true,
+            'index'      => 'slug',
+            'label'      => trans('Slug'),
+            'type'       => 'string',
+            'searchable' => true,
+            'filterable' => true,
+            'sortable'   => true,
         ]);
 
         $this->addColumn([
-            'index'    => 'name',
-            'label'    => trans('Name'),
-            'type'     => 'string',
-            'sortable' => true,
+            'index'      => 'name',
+            'label'      => trans('Name'),
+            'type'       => 'string',
+            'searchable' => true,
+            'filterable' => true,
+            'sortable'   => true,
         ]);
 
         $this->addColumn([
-            'index'    => 'description',
-            'label'    => trans('Description'),
-            'type'     => 'string',
-            'sortable' => true,
+            'index'      => 'description',
+            'label'      => trans('Description'),
+            'type'       => 'string',
+            'searchable' => true,
+            'filterable' => true,
+            'sortable'   => true,
         ]);
     }
 
@@ -278,14 +284,14 @@ class CategoryDataGrid extends DataGrid
     public function prepareActions()
     {
         $this->addAction([
-            'title'  => trans('ui::app.datagrid.edit'),
+            'title'  => trans('Edit'),
             'method' => 'GET',
             'route'  => 'admin.categories.edit',
             'icon'   => 'pencil-icon',
         ]);
 
         $this->addAction([
-            'title'        => trans('ui::app.datagrid.delete'),
+            'title'        => trans('Delete'),
             'method'       => 'DELETE',
             'route'        => 'admin.categories.delete',
             'confirm_text' => trans('ui::app.datagrid.massaction.delete', ['resource' => 'user']),

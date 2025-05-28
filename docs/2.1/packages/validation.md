@@ -46,8 +46,8 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name' => 'required',
-            'email' => 'required|email',
+            'name'    => 'required',
+            'email'   => 'required|email',
             'message' => 'required|max:250',
         ];
 
