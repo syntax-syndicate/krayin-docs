@@ -31,7 +31,7 @@ Here's the updated directory structure:
                 └── Resources
                     ├── ...
                     └── assets
-                        ├── css
+                        ├── sass
                         │   └── app.css
                         ├── js
                         │   └── app.js

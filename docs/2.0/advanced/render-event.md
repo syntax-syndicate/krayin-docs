@@ -10,25 +10,27 @@ The `view_render_event()` function in Krayin allows developers to inject content
 
 To utilize the `view_render_event()` function effectively, follow these steps:
 
-In this example `admin.contacts.persons.create.header.before` and `admin.contacts.persons.create.header.after` are custom event names that denote where content should be injected before and after the page-header section, respectively inside the `packages/Webkul/Admin/src/Resources/views/contacts/persons/create.blade.php` fie
+In this example, `admin.contacts.persons.edit.form_controls.before` and `admin.contacts.persons.edit.form_controls.after`
+are custom event names that denote where content should be injected before and after the form controls section, respectively inside the `packages/Webkul/Admin/src/Resources/views/contacts/persons/edit.blade.php` file.
+
 
 ### Listening to Events
 
 To handle these events and inject content dynamically, you need to listen to them in your application’s event system (typically in the `EventServiceProvider`).
 
-Open your `EventServiceProvider.php` file located in `app/Providers` or similar directory.
+Create a file named `EventServiceProvider.php` inside your package’s `Providers` directory:
 
 In the `boot()` method of your `EventServiceProvider`, add event listeners as follows:
 
 ```php
 <?php
 
-namespace Webkul\Category\Providers;
+namespace Webkul\<PackageName>\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
 
-class CategoryServiceProvider extends ServiceProvider
+class EventServiceProvider extends ServiceProvider
 {
     /**
      * Register any events for your application.
@@ -37,17 +39,22 @@ class CategoryServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Event::listen('admin.contacts.persons.create.header.before', function($viewRenderEventManager) {
-            $viewRenderEventManager->addTemplate('path/to/before_content_template.blade.php');
+        Event::listen('admin.contacts.persons.edit.form_controls.before', function($viewRenderEventManager) {
+            $viewRenderEventManager->addTemplate('product::shop.quotes.create');
         });
 
-        Event::listen('admin.contacts.persons.create.header.after', function($viewRenderEventManager) {
-            $viewRenderEventManager->addTemplate('path/to/after_content_template.blade.php');
+        Event::listen('admin.contacts.persons.edit.form_controls.after', function($viewRenderEventManager) {
+            $viewRenderEventManager->addTemplate('product::shop.quotes.view');
         });
     }
 }
 ```
-Replace `'path/to/before_content_template.blade.php'` and `'path/to/after_content_template.blade.php'` with the actual paths to the Blade template files you want to inject.
+
+In this example:
+
+- We’re listening to the event: `admin.contacts.persons.edit.form_controls.before` amd `admin.contacts.persons.edit.form_controls.after`.
+- We're dynamically injecting the template: `product::shop.quotes.create` and `product::shop.quotes.view`, where `product` is the supposed namespace of the package and `shop.quotes.create` and `shop.quotes.view` are the view names.
+- The contents of that Blade file will be rendered at the position of the event in the DOM
 
 :::warning
    Make sure that you have registered the **`EventServiceProvider`** in your own service provider.
@@ -63,6 +70,6 @@ Replace `'path/to/before_content_template.blade.php'` and `'path/to/after_conten
 
 - `Integration`: Integrate this functionality carefully into your Krayin application to maintain coherence and readability of your codebase
 
-- `Customization`: Customize event names (`'admin.contacts.persons.create.header.before'`, `'admin.contacts.persons.create.header.after'`) and template paths according to your specific application needs and structure.
+- `Customization`: Customize event names (`'admin.contacts.persons.edit.form_controls.before'`, `'admin.contacts.persons.edit.form_controls.after'`) and template paths according to your specific application needs and structure.
 
 By following these steps, you can effectively leverage the `view_render_event()` function in Krayin to dynamically inject content into template sections, enhancing flexibility and customization options within your application.
