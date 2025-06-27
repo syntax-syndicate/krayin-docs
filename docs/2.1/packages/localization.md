@@ -106,7 +106,7 @@ To add translations for your package, you can edit the `app.php` file located in
 return [
   'categories' => [
     'index' => [
-      'title' => 'Categories'
+      'title' => 'Categories',
     ],
   ],
 ];

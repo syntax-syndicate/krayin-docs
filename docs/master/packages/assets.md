@@ -12,20 +12,66 @@ Assets in web development refer to files such as stylesheets, scripts, and image
 
 To learn in detail about Bundling Asset, you can visit the Laravel documentation [here](https://laravel.com/docs/10.x/frontend#bundling-assets).
 
+## Adjust Vite in Krayin
+
+### Step 1: Create a New Vite Configuration File
+
+Create a new file named `krayin-vite.php` in the packages/Webkul/`<PackageName>`/src/Config directory.
+
+
+### Step 2: Define Vite Configuration
+
+In the `krayin-vite.php` file, paste this code.
+
+```php
+<?php
+
+return [
+    'custom-package' => [
+        'hot_file'                 => 'custom-package-vite.hot', // change the vite name from custom-package-vite.hot to your custom package name
+        'build_directory'          => 'custom-package/build', // change the build directory from custom-package/build to your custom package name
+        'package_assets_directory' => 'src/Resources/assets',
+    ],
+];
+```
+
+### Step 3: Make it Available in the Service Provider of Your Package
+
+In your package's service provider, include this code in the `register` method:
+
+```php
+$this->mergeConfigFrom(
+    dirname(__DIR__) . '/Config/krayin-vite.php',
+    'krayin-vite.viters'
+);
+```
+
+### Step 4: Publish the Assets to the Public Directory
+
+In your package's service provider, include this code in the `boot` method:
+
+```php
+$this->publishes([
+    __DIR__ . '/../../publishable/build' => public_path('custom-package/build'), // change the build directory from custom-package/build to your custom package name
+], 'public');
+```
+
+
 ## Directory Structure
 
 To maintain organization and manage these assets effectively, developers typically structure them within dedicated directories in the project's `Resources\assets` directory. For instance:
 
-- `/Resources/assets/images`: Stores image files used throughout the application.
 - `/Resources/assets/js`: Holds JavaScript files such as `app.js` for client-side scripting.
-- `/Resources/assets/sass`: Contains CSS files like `app.css` for styling the application.
+- `/Resources/assets/css`: Contains CSS files like `app.css` for styling the application.
+- `/Resources/assets/images`: Stores image files used throughout the application.
+- `/Resources/assets/fonts`: Stores fonts used throughout the application.
 
 Here's the updated directory structure:
 
 ```php
 └── packages
     └── Webkul
-        └── Category
+        └── PackageName
             └── src
                 ├── ...
                 └── Resources
@@ -36,8 +82,27 @@ Here's the updated directory structure:
                         ├── js
                         │   └── app.js
                         └── images
+                        └── fonts
                     
 ```
+The following JavaScript code snippet is used to track and publish all images and fonts in packages/Webkul/`<PackageName>`/Resources/assets/js/app.js:
+
+```js
+/**
+ * This will track all the images and fonts for publishing.
+*/
+import.meta.glob(["../images/**", "../fonts/**"]);
+```
+
+#### Explanation
+
+- This code utilizes the `import.meta.glob()` function, which is a feature in JavaScript for importing multiple modules using glob patterns.
+
+- `"../images/**"` : Matches all files and directories within the images directory and its subdirectories.
+
+- `"../fonts/**"` : Matches all files and directories within the fonts directory and its subdirectories.
+
+
 
 ## Configure Compiling Assets
 
@@ -45,10 +110,67 @@ To compile the assets, perform the following steps:
 
 ## Create Configuration Files
 
-First, create the following configuration files in the root directory of your package, specifically inside `packages/Webkul/Category`:
+First, create the following configuration files in the root directory of your package, specifically inside `packages/Webkul/<PackageName>`
 
+- `composer.json`
 - `package.json`
-- `webpack.mix.js`
+- `postcss.config.js`
+- `tailwind.config.js`
+- `vite.config.js`
+
+
+### Set Up composer.json
+
+Here the configuration of composer.json you can customize for your configuration
+
+```json
+{
+    "name": "krayin/<PackageName>",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "krayin",
+            "email": "support@krayin.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Webkul\\<PackageName>\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webkul\\<PackageName>\\Providers\\<PackageName>ServiceProvider"
+            ],
+            "aliases": {}
+        }
+    },
+    "minimum-stability": "dev"
+}
+
+```
+#### Explanation
+
+- This section explains how to set up a composer.json file, which is used by Composer (a PHP dependency manager) to manage your project's dependencies and auto-loading.
+
+Key parts of the configuration:
+
+- `name`: The package name, using the format krayin/`<PackageName>`. Replace `<PackageName>` with your actual package name.
+
+- `license`: Specifies the license type (MIT here).
+
+- `authors`: Lists the package authors and their contact info.
+
+- `require`: Lists required PHP packages. It's empty here, but you can add dependencies as needed.
+
+- `autoload`: Uses PSR-4 auto-loading, mapping the namespace Webkul\ `<PackageName>`\ to the src/ directory. This helps Composer automatically load your PHP classes.
+
+- `extra`: Contains Laravel-specific configuration, registering your package's service provider so Laravel can use it.
+
+- `minimum-stability`: Set to dev, allowing installation of development versions of dependencies.
+
 
 ### Set Up package.json
 
@@ -57,262 +179,232 @@ Copy and paste the following code into your `package.json` file:
 ```json
 {
     "private": true,
+    "type": "module",
     "scripts": {
-        "dev": "npm run development",
-        "development": "mix",
-        "watch": "mix watch",
-        "watch-poll": "mix watch -- --watch-options-poll=1000",
-        "hot": "mix watch --hot",
-        "prod": "npm run production",
-        "production": "mix --production"
+        "dev": "vite",
+        "build": "vite build"
     },
     "devDependencies": {
-        "axios": "^0.21.4",
-        "cross-env": "^7.0.3",
-        "jquery": "^3.6.0",
-        "laravel-mix": "^6.0.6",
-        "laravel-mix-merge-manifest": "^master.0",
-        "lodash": "^4.17.19",
-        "postcss": "^8.1.14",
-        "sass": "^1.32.8",
-        "sass-loader": "^11.0.1",
-        "vue": "^2.6.12",
-        "vue-loader": "^15.9.6",
-        "vue-template-compiler": "^2.6.12"
+        "autoprefixer": "^10.4.16",
+        "axios": "^1.7.4",
+        "laravel-vite-plugin": "^1.0",
+        "postcss": "^8.4.23",
+        "tailwindcss": "^3.3.2",
+        "vite": "^5.4.12",
+        "vue": "^3.4.21"
     },
     "dependencies": {
-        "moment": "^2.29.1",
-        "vee-validate": "^2.2.15",
-        "vue-cal": "^3.10.1",
-        "vue-kanban": "^1.8.0",
-        "vue-timeago": "^5.1.3",
-        "vuedraggable": "^2.24.3"
+        "@vee-validate/i18n": "^4.9.1",
+        "@vee-validate/rules": "^4.9.1",
+        "@vitejs/plugin-vue": "^4.2.3",
     }
 }
 
 ```
-
 #### Explanation
 
 The `package.json` file includes the following:
 
-- Ensures the package is private and not published to a registry.
+-  Ensures the package is private and not published to a registry.
 
-- **Scripts**
-  - dev: Runs the development script. This command is a shortcut for running npm run development.
+- **Scripts** 
+    - `dev` Runs the Vite development server.
 
-  - development: Executes mix. This typically refers to Laravel Mix, a wrapper around Webpack, to compile and bundle assets in development mode.
+    - `build` Builds the project for production using Vite.
 
-  - watch: Runs mix watch. This command watches for file changes and automatically recompiles assets whenever a change is detected, useful during development for continuous integration of updates.
-
-  - watch-poll: Runs mix watch with the --watch-options-poll=1000 option. This enables polling for file changes every 1000 milliseconds (1 second), which can be useful in certain development environments where file change notifications are unreliable.
-
-  - hot: Runs mix watch --hot. This command enables Hot Module Replacement (HMR), allowing modules to be replaced without a full browser refresh, enhancing development experience by maintaining application state.
-
-  - prod: Runs the production script. This command is a shortcut for running npm run production.
-
-  - production: Executes mix --production. This compiles and bundles assets for production, typically with optimizations like minification, which makes the assets smaller and faster to load in a production environment.
-
-- **DevDependencies:**
-The devDependencies section in a package.json file specifies the packages that are required for the development of the application. These dependencies are not included in the production build. Here’s a brief overview of each dependency listed:
-
-  - axios: A popular promise-based HTTP client for making requests to servers. It is used to handle HTTP requests and responses.
-
-  - cross-env: A utility that allows you to set environment variables across different platforms in a consistent way. This is particularly useful for ensuring scripts work across various operating systems.
-
-  - jquery: A fast, small, and feature-rich JavaScript library. It simplifies things like HTML document traversal and manipulation, event handling, and animation.
-
-  - laravel-mix: An elegant wrapper around Webpack for the Laravel framework. It simplifies the process of compiling and minifying CSS and JavaScript files.
-
-  - laravel-mix-merge-manifest: A Laravel Mix extension that merges manifests when you have multiple Mix instances in your project. This is useful for complex projects with multiple entry points.
-
-  - lodash: A modern JavaScript utility library delivering modularity, performance, and extras. It provides helpful functions for working with arrays, numbers, objects, strings, etc.
-
-  - postcss: A tool for transforming CSS with JavaScript plugins. These plugins can lint your CSS, support variables and mixins, transpile future CSS syntax, inline images, and more.
-
-  - sass: A preprocessor scripting language that is interpreted or compiled into CSS. It allows you to use features such as variables, nested rules, and mixins.
-
-  - sass-loader: A loader for Webpack that compiles SCSS or SASS files to CSS. It allows you to use Sass in your Webpack workflow.
-
-  - vue: A progressive JavaScript framework for building user interfaces. Vue is designed to be incrementally adaptable and focuses on the view layer.
-
-  - vue-loader: A loader for Webpack that allows you to write Vue components in a single file format, combining HTML, JavaScript, and CSS.
-
-  - vue-template-compiler: A package used to pre-compile Vue templates into render functions. It is typically used alongside vue-loader to compile Vue components.
+- **DevDependencies:** These are packages required during the development phase, including:
+    - `autoprefixer` Adds vendor prefixes to CSS rules.
+    - `axios` A promise-based HTTP client.
+    - `laravel-vite-plugin` Integrates Vite with Laravel.
+    - `postcss` A tool for transforming CSS with JavaScript plugins.
+    - `tailwindcss` A utility-first CSS framework.
+    - `vite` A frontend build tool.
+    - `vue` The progressive JavaScript framework.
 
 - **Dependencies:** These are essential packages required for the project to function, including:
-  - moment: A widely-used library for parsing, validating, manipulating, and formatting dates in JavaScript. It simplifies working with dates and times.
+    - `@vee-validate/i18n` Internationalization for VeeValidate.
+    - `@vee-validate/rules` Validation rules for VeeValidate.
+    - `@vitejs/plugin-vue` Integrates Vue with Vite.
 
-  - vee-validate: A form validation library for Vue.js that allows you to validate form inputs with simple declarative syntax. It helps manage form validation logic and provides user feedback on form errors.
 
-  - vue-cal: A flexible calendar component for Vue.js. It provides features like multi-range selection, drag-and-drop, and custom event rendering, making it useful for implementing calendar functionality in applications.
 
-  - vue-kanban: A Kanban board component for Vue.js. It allows you to create and manage tasks in a Kanban-style board, useful for project management and task tracking applications.
 
-  - vue-timeago: A Vue.js component that automatically updates the display of dates and times to a "time ago" format, such as "3 minutes ago" or "2 days ago". It enhances the user interface by providing relative time formatting.
+### Set Up postcss.config.js
 
-  - vuedraggable: A Vue.js component based on the Sortable.js library that enables drag-and-drop functionality. It allows you to create draggable lists and components, enhancing the interactivity of your application.
-
-### Set Up webpack.mix.js
-
-Here the configuration of webpack.min.js you can customize for your configuration
-
-```javascript
-const mix = require("laravel-mix");
-
-if (mix == 'undefined') {
-    const { mix } = require("laravel-mix");
-}
-
-require("laravel-mix-merge-manifest");
-
-if (mix.inProduction()) {
-    var publicPath = 'publishable/assets';
-} else {
-    var publicPath = "../../../public/vendor/webkul/category/assets";
-}
-
-mix.setPublicPath(publicPath).mergeManifest();
-mix.disableNotifications();
-
-mix.js(__dirname + "/src/Resources/assets/js/app.js", "js/category.js")
-    .copy(__dirname + "/src/Resources/assets/images", publicPath + "/images")
-    .sass(__dirname + "/src/Resources/assets/sass/app.scss", "css/category.css")
-    .options({
-        processCssUrls: false
-    }).vue();
-
-mix.webpackConfig({
-    resolve: {
-        alias: {
-            'vue$': 'vue/dist/vue.runtime.js'
-        }
-    }
-});
-
-if (! mix.inProduction()) {
-    mix.sourceMaps();
-}
-
-if (mix.inProduction()) {
-    mix.version();
-}
-```
-
-This script is a configuration file for Laravel Mix, a tool for compiling and optimizing frontend assets in a Laravel application. Let's break down each part of the code:
-
-### Importing Laravel Mix
+Copy and paste the following code into your `postcss.config.js` file:
 
 ```js
-const mix = require("laravel-mix");
-if (mix == 'undefined') {
-    const { mix } = require("laravel-mix");
-}
-```
-
-This code imports Laravel Mix. The conditional check ensures that `mix` is defined, though it's unnecessary here as `require` should always return the module correctly.
-
-### Merging Manifests
-
-```js
-require("laravel-mix-merge-manifest");
-```
-
-This imports the `laravel-mix-merge-manifest` package, which allows merging multiple Mix manifests.
-
-### Setting the Public Path
-
-```js
-if (mix.inProduction()) {
-  var publicPath = 'publishable/assets';
-} else {
-  var publicPath = "../../../public/vendor/webkul/admin/assets";
-}
-```
-
-The `publicPath` is set based on whether the build is for production or development. In production, it sets the path to `publishable/assets`, otherwise, it sets the path to `../../../public/vendor/webkul/admin/assets`.
-
-### Mix Configuration
-
-```js
-mix.setPublicPath(publicPath).mergeManifest();
-mix.disableNotifications();
-```
-
-- mix.setPublicPath(publicPath): Sets the public directory where the compiled assets will be stored.
-
-- mix.mergeManifest(): Merges the Mix manifests.
-
-- mix.disableNotifications(): Disables system notifications for the build process.
-
-### Asset Compilation
-
-```js
-mix.js(__dirname + "/src/Resources/assets/js/app.js", "js/admin.js")
-    .copy(__dirname + "/src/Resources/assets/images", publicPath + "/images")
-    .sass(__dirname + "/src/Resources/assets/sass/app.scss", "css/admin.css")
-    .options({
-        processCssUrls: false
-    }).vue();
-
-```
-
-- mix.js(): Compiles the JavaScript file from the specified source to the specified destination.
-
-- mix.copy(): Copies image files from the source directory to the public path.
-
-- mix.sass(): Compiles the SASS file to CSS.
-
-- options({ processCssUrls: false }): Disables the processing of URLs found in CSS files.
-
-- vue(): Configures Laravel Mix to handle Vue.js single-file components.
-
-### Webpack Configuration
-
-```js
-mix.webpackConfig({
-    resolve: {
-        alias: {
-            'vue$': 'vue/dist/vue.runtime.js'
-        }
-    }
+module.exports = ({ env }) => ({
+    plugins: [require("tailwindcss")(), require("autoprefixer")()],
 });
 ```
 
-This customizes the Webpack configuration. It sets an alias for Vue to use the runtime-only build.
+#### Explanation
 
-### Source Maps
+The `postcss.config.js` file configures PostCSS with the following plugins:
 
-```js
-if (!mix.inProduction()) {
-    mix.sourceMaps();
-}
-```
+- `tailwindcss` Integrates Tailwind CSS.
 
-This generates source maps only in non-production environments to help with debugging.
+- `autoprefixer` Adds vendor prefixes to CSS rules to ensure cross-browser compatibility.
 
-### Versioning
+### Set Up tailwind.config.js
+
+Copy and paste the following code into your `tailwind.config.js` file:
 
 ```js
-if (mix.inProduction()) {
-    mix.version();
-}
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    content: ["./src/Resources/**/*.blade.php", "./src/Resources/**/*.js"],
+
+    theme: {
+        container: {
+            center: true,
+
+            screens: {
+                "4xl": "1920px",
+            },
+
+            padding: {
+                DEFAULT: "16px",
+            },
+        },
+
+        screens: {
+            sm: "525px",
+            md: "768px",
+            lg: "1024px",
+            xl: "1240px",
+            "2xl": "1440px",
+            "3xl": "1680px",
+            "4xl": "1920px",
+        },
+
+        extend: {
+            colors: {},
+
+            fontFamily: {
+                inter: ['Inter'],
+                icon: ['icomoon']
+            }
+        },
+    },
+
+    darkMode: 'class',
+
+    plugins: [],
+
+    safelist: [
+        {
+            pattern: /icon-/,
+        }
+    ]
+};
 ```
 
-This enables versioning in production, appending a unique hash to filenames to help with cache busting.
+The `tailwind.config.js` file configures Tailwind CSS for your project:
 
-Overall, this configuration sets up Laravel Mix to handle JavaScript, images, SASS, and Vue.js components, with different behaviors for development and production environments.
+- `content` Specifies the files Tailwind should scan for class names to generate styles. In this case, it includes all Blade and JavaScript files in the src/Resources directory.
+
+- `theme` Allows customization of the default theme. The extend object is used to add or override default styles.
+
+- `plugins` An array where you can add Tailwind CSS plugins. Currently, it is empty.
+
+- `safelist` Allows you to whitelist classes that are not generated by Tailwind CSS. In this case, it whitelists classes with the prefix "icon-".
+
+By following these steps and setting up the tailwind.config.js file as shown, you’ll ensure that Tailwind CSS is properly integrated and configured in your project.
+
+
+### Set Up vite.config.js
+
+Copy and paste the following code into your `vite.config.js` file:
+
+```js
+import { defineConfig, loadEnv } from "vite";
+import vue from "@vitejs/plugin-vue";
+import laravel from "laravel-vite-plugin";
+import path from "path";
+
+export default defineConfig(({ mode }) => {
+    const envDir = "../../../";
+
+    Object.assign(process.env, loadEnv(mode, envDir));
+
+    return {
+        build: {
+            emptyOutDir: true,
+        },
+
+        envDir,
+
+        server: {
+            host: process.env.VITE_HOST || "localhost",
+            port: process.env.VITE_PORT || 5173,
+            cors: true,
+        },
+
+        plugins: [
+            vue(),
+
+            laravel({
+                hotFile: "../../../public/custom-package-vite.hot", // change the vite name from custom-package-vite.hot to your custom package name
+                publicDirectory: "publishable",
+                buildDirectory: "build",
+                input: [
+                    "src/Resources/assets/css/app.css",
+                    "src/Resources/assets/js/app.js",
+                ],
+                refresh: true,
+            }),
+        ],
+
+        experimental: {
+            renderBuiltUrl(filename, { hostId, hostType, type }) {
+                if (hostType === "css") {
+                    return path.basename(filename);
+                }
+            },
+        },
+    };
+});
+```
+
+#### Explanation
+
+The `vite.config.js` file configures Vite for your project. Here are the key sections:
+
+- `defineConfig` A function that defines the configuration for Vite.
+
+- `loadEnv` Loads environment variables from a specific directory.
+
+- `emptyOutDir` Ensures the output directory is cleaned before building.
+
+- `envDir` Specifies the directory for environment variables.
+
+- `host` The host address for the development server.
+
+- `port` The port for the development server.
+
+- `plugins` An array of plugins used by Vite. The laravel-vite-plugin integrates Vite with Laravel.
+
+- `experimental` Experimental features, such as custom handling of built URLs for CSS.
+
 
 ## Load Assets in Blade File
 
-Add the following code to your Blade file to load assets from your package:
+### Step 1: Create a Blade File
+
+Create a new Blade file in your package's resources/views directory. For example, create a file named `custom-package-style.blade.php` and paste the below code in it and replace the `custom-package` with your custom package name.
 
 ```php
-  <link rel="stylesheet" href="{{ asset('vendor/webkul/ui/assets/css/ui.css') }}">
-  <link rel="stylesheet" href="{{ asset('vendor/webkul/category/assets/css/category.css') }}">
+{{ vite()->set(['src/Resources/assets/css/app.css', 'src/Resources/assets/js/app.js'], 'custom-package') }}
+```
+### Step 2: Render the Blade File using EventServiceProvider
 
-  // ...
+In your package's EventServiceProvider provider which is placed in packages/Webkul/`<PackageName>`/src/Providers/EventServiceProvider.php, include this code in the `boot` method:
 
-  <script type="text/javascript" src="{{ asset('vendor/webkul/category/assets/js/category.js') }}"></script>
-  <script type="text/javascript" src="{{ asset('vendor/webkul/ui/assets/js/ui.js') }}"></script>
+```php
+Event::listen('admin.layout.head.before', function ($viewRenderEventManager) {
+    $viewRenderEventManager->addTemplate('custom-package::path-to-file/custom-package-style.blade.php');
+});
+
 ```

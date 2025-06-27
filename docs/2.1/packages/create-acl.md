@@ -92,7 +92,7 @@ This will merge the ACL configuration with the existing configuration.
 After making changes, clear the configuration cache to apply the latest ACL configuration:
 
 ```sh
-php artisan optimize
+php artisan optimize:clear
 ```
 
 ### Verify in Admin Panel
